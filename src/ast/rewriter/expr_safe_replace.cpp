@@ -39,7 +39,7 @@ void expr_safe_replace::operator()(expr_ref_vector& es) {
 }
 
 void expr_safe_replace::operator()(expr* e, expr_ref& res, unsigned max_depth) {
-    m_todo.push_back({ e, 1 });
+    m_todo.push_back({ e, 0 });
     expr* a, *b;
     
     while (!m_todo.empty()) {
@@ -50,9 +50,13 @@ void expr_safe_replace::operator()(expr* e, expr_ref& res, unsigned max_depth) {
         }
         else if (m_subst.find(a, b)) {
             m_cache.insert(a, b);
-            m_todo.pop_back();            
+            m_todo.pop_back();
         }
         else if (is_var(a)) {
+            m_cache.insert(a, a);
+            m_todo.pop_back();
+        }
+        else if (depth == max_depth) {
             m_cache.insert(a, a);
             m_todo.pop_back();
         }
