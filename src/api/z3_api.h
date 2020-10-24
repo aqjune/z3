@@ -5054,6 +5054,19 @@ extern "C" {
                                 Z3_ast const to[]);
 
     /**
+       \brief This is equivalent to Z3_substitute, but bound the traversal to
+       max_depth from the root of a.
+
+       def_API('Z3_substitute_bounded', AST, (_in(CONTEXT), _in(AST), _in(UINT), _in_array(2, AST), _in_array(2, AST), _in(UINT)))
+    */
+    Z3_ast Z3_API Z3_substitute_bounded(Z3_context c,
+                                        Z3_ast a,
+                                        unsigned num_exprs,
+                                        Z3_ast const from[],
+                                        Z3_ast const to[],
+                                        unsigned max_depth);
+
+    /**
        \brief Substitute the free variables in \c a with the expressions in \c to.
        For every \c i smaller than \c num_exprs, the variable with de-Bruijn index \c i is replaced with term \ccode{to[i]}.
 

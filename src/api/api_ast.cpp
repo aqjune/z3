@@ -866,6 +866,40 @@ extern "C" {
         Z3_CATCH_RETURN(nullptr);
     }
 
+    Z3_ast Z3_API Z3_substitute_bounded(Z3_context c,
+                                        Z3_ast _a,
+                                        unsigned num_exprs,
+                                        Z3_ast const _from[],
+                                        Z3_ast const _to[],
+                                        unsigned max_depth) {
+        Z3_TRY;
+        LOG_Z3_substitute_bounded(c, _a, num_exprs, _from, _to, max_depth);
+        RESET_ERROR_CODE();
+        ast_manager & m = mk_c(c)->m();
+        expr * a = to_expr(_a);
+        expr * const * from = to_exprs(num_exprs, _from);
+        expr * const * to   = to_exprs(num_exprs, _to);
+        expr * r = nullptr;
+        for (unsigned i = 0; i < num_exprs; i++) {
+            if (m.get_sort(from[i]) != m.get_sort(to[i])) {
+                SET_ERROR_CODE(Z3_SORT_ERROR, nullptr);
+                RETURN_Z3(of_expr(nullptr));
+            }
+            SASSERT(from[i]->get_ref_count() > 0);
+            SASSERT(to[i]->get_ref_count() > 0);
+        }
+        expr_safe_replace subst(m);
+        for (unsigned i = 0; i < num_exprs; i++) {
+            subst.insert(from[i], to[i]);
+        }
+        expr_ref   new_a(m);
+        subst(a, new_a, max_depth);
+        mk_c(c)->save_ast_trail(new_a);
+        r = new_a.get();
+        RETURN_Z3(of_expr(r));
+        Z3_CATCH_RETURN(nullptr);
+    }
+
     Z3_ast Z3_API Z3_substitute_vars(Z3_context c,
                                      Z3_ast _a,
                                      unsigned num_exprs,

@@ -38,12 +38,13 @@ void expr_safe_replace::operator()(expr_ref_vector& es) {
     }
 }
 
-void expr_safe_replace::operator()(expr* e, expr_ref& res) {
-    m_todo.push_back(e);
+void expr_safe_replace::operator()(expr* e, expr_ref& res, unsigned max_depth) {
+    m_todo.push_back({ e, 1 });
     expr* a, *b;
     
     while (!m_todo.empty()) {
-        a = m_todo.back();
+        a = m_todo.back().first;
+        unsigned depth = m_todo.back().second;
         if (m_cache.contains(a)) {
             m_todo.pop_back();
         }
@@ -67,8 +68,8 @@ void expr_safe_replace::operator()(expr* e, expr_ref& res) {
                     arg_differs |= arg != d;
                     SASSERT(m.get_sort(arg) == m.get_sort(d));
                 }
-                else {
-                    m_todo.push_back(arg);
+                else if (depth < max_depth) {
+                    m_todo.push_back({ arg, depth + 1 });
                 }
             }
             if (m_args.size() == n) {
@@ -98,15 +99,15 @@ void expr_safe_replace::operator()(expr* e, expr_ref& res) {
             }
             unsigned np = q->get_num_patterns();
             for (unsigned i = 0; i < np; ++i) {
-                replace(q->get_pattern(i), tmp);
+                replace(q->get_pattern(i), tmp, max_depth - depth);
                 pats.push_back(tmp);
             }
             np = q->get_num_no_patterns();
             for (unsigned i = 0; i < np; ++i) {
-                replace(q->get_no_pattern(i), tmp);
+                replace(q->get_no_pattern(i), tmp, max_depth - depth);
                 nopats.push_back(tmp);
             }
-            replace(q->get_expr(), new_body);
+            replace(q->get_expr(), new_body, max_depth - depth);
             b = m.update_quantifier(q, pats.size(), pats.c_ptr(), nopats.size(), nopats.c_ptr(), new_body);
             m_refs.push_back(b);
             m_cache.insert(a, b);

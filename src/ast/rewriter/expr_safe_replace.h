@@ -29,7 +29,8 @@ class expr_safe_replace {
     expr_ref_vector m_dst;
     obj_map<expr, expr*> m_subst;
     obj_map<expr,expr*> m_cache;
-    ptr_vector<expr> m_todo, m_args;
+    vector<std::pair<expr *, unsigned>> m_todo;
+    ptr_vector<expr> m_args;
     expr_ref_vector m_refs;
 
 public:
@@ -39,7 +40,7 @@ public:
 
     void operator()(expr_ref& e) { (*this)(e.get(), e); }
 
-    void operator()(expr* src, expr_ref& e);
+    void operator()(expr* src, expr_ref& e, unsigned max_depth = -1);
 
     void operator()(expr_ref_vector& es);
 
